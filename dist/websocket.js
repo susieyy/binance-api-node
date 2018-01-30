@@ -234,21 +234,31 @@ var trades = function trades(payload, cb) {
 };
 
 var createSocket = function createSocket(path, cb) {
-  var errorHandler = function errorHandler() {
-    return w = newSocket(path, cb, errorHandler);
+  var onClose = function onClose() {
+    if (!closedManually) {
+      w = newSocket(path, cb, onClose);
+    }
   };
-  var w = newSocket(path, cb, errorHandler);
+
+  var closedManually = false;
+  var w = newSocket(path, cb, onClose);
+
   return function () {
-    return w.close();
+    closedManually = true;
+    w.close();
   };
 };
 
-var newSocket = function newSocket(path, cb, errorHandler) {
+var newSocket = function newSocket(path, cb, onClose) {
   var w = new _ws2.default(BASE + '/' + path);
+  var onDisconnect = function onDisconnect() {
+    return setTimeout(onClose, RECONNECT_DELAY);
+  };
+
   w.on('message', cb);
-  w.on('error', function () {
-    return setTimeout(errorHandler, RECONNECT_DELAY);
-  });
+  w.on('error', onDisconnect);
+  w.on('close', onDisconnect);
+
   return w;
 };
 
