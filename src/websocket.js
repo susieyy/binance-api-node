@@ -180,12 +180,12 @@ const createSocket = (path, cb) => {
       w = newSocket(path, cb, onClose)
     }
   }
-  
+
   let closedManually = false
-  let w = newSocket(path, cb, onClose)  
-  
+  let w = newSocket(path, cb, onClose)
+
   return () => {
-    closedManually = true
+    closedManually = false
     w.close()
   }
 }
@@ -193,11 +193,11 @@ const createSocket = (path, cb) => {
 const newSocket = (path, cb, onClose) => {
   const w = new WebSocket(`${BASE}/${path}`)
   const onDisconnect = () => setTimeout(onClose, RECONNECT_DELAY)
-  
+
   w.on('message', cb)
   w.on('error', onDisconnect)
   w.on('close', onDisconnect)
- 
+
   return w
 }
 
